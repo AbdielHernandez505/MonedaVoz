@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B1120">
+  <meta name="description" content="Moneda Voz identifica monedas mexicanas con la cámara y anuncia su valor.">
+  <title>Moneda Voz — Identificador accesible</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.5/dist/teachablemachine-image.min.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#scanner">Saltar al escáner</a>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Moneda Voz, inicio"><span class="brand-mark" aria-hidden="true">$</span><span>Moneda <strong>Voz</strong></span></a>
+    <div class="header-actions">
+      <button class="button button-outline" id="text-size-button" type="button" aria-pressed="false">Texto gigante</button>
+      <button class="button button-outline" id="top-voice-button" type="button" aria-pressed="false">Silenciar</button>
+    </div>
+  </header>
+
+  <main class="page-shell" id="scanner" tabindex="-1">
+    <div class="status-line" role="status" aria-live="polite" aria-atomic="true"><span class="status-dot" aria-hidden="true"></span><span id="app-status">Listo para empezar. Pulsa el botón para activar la cámara.</span></div>
+    <section class="main-grid" aria-label="Escáner de monedas">
+      <div class="camera-panel card">
+        <div class="panel-heading"><h1>Escáner de monedas</h1><span class="camera-status" id="camera-status"><span></span><span id="camera-state">Cámara apagada</span></span></div>
+        <div class="camera-viewport" id="camera-viewport">
+          <video id="camera-video" autoplay muted playsinline aria-label="Vista en vivo de la cámara para identificar una moneda" hidden></video>
+          <div class="viewfinder" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <div class="camera-placeholder" id="camera-placeholder"><div class="camera-symbol" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="m16 12 3-5h10l3 5h9v28H7V12Z"/><circle cx="24" cy="25" r="8"/></svg></div><h2>Activa la cámara</h2><p>Coloca una moneda dentro del recuadro.</p></div>
+          <div class="live-hint" id="live-hint" hidden>Una moneda · buena luz · mantenla quieta</div>
+          <button class="camera-switch" id="switch-camera" type="button" hidden aria-label="Cambiar cámara">Cambiar cámara</button>
+        </div>
+        <div class="camera-controls">
+          <button class="button button-primary" id="start-button" type="button"><span id="start-label">Iniciar cámara y audio</span><span aria-hidden="true">→</span></button>
+          <p class="permission-note">No usamos tu micrófono. La imagen se analiza en este dispositivo.</p>
+        </div>
+      </div>
+
+      <section class="result-panel card" aria-labelledby="result-heading">
+        <div class="panel-heading"><h2 id="result-heading">Resultado</h2><span class="detection-state" id="detection-state">En espera</span></div>
+        <div class="result-box"><span class="result-label">MONEDA DETECTADA</span><p id="coin-result">Esperando moneda...</p></div>
+        <div class="confidence-heading"><span>Confianza</span><span id="confidence-value">—</span></div>
+        <div class="progress-track" id="confidence-progress" role="progressbar" aria-label="Confianza de detección" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Sin detección"><span id="confidence-bar"></span></div>
+        <p class="result-note" id="result-note">El resultado aparecerá aquí.</p>
+        <button class="button button-secondary repeat-button" id="repeat-voice-button" type="button" disabled>Repetir voz</button>
+      </section>
+
+      <section class="controls-panel card" aria-labelledby="controls-heading">
+        <h2 id="controls-heading">Controles de audio</h2>
+        <div class="audio-control"><div><h3>Guía por voz</h3><p id="voice-status">Voz activada · español de México</p></div><button class="button button-secondary" id="voice-button" type="button" aria-pressed="false"><span id="voice-label">Silenciar</span></button></div>
+        <div class="control-divider"></div>
+        <div class="threshold-heading"><label for="confidence-threshold">Umbral de confianza</label><output id="threshold-value" for="confidence-threshold">85<span>%</span></output></div>
+        <input id="confidence-threshold" type="range" min="50" max="99" step="1" value="85" aria-describedby="threshold-help" aria-valuetext="85 por ciento">
+        <div class="range-labels" aria-hidden="true"><span>50%</span><span>99%</span></div>
+        <p class="helper-text" id="threshold-help">La moneda debe superar este nivel y mantenerse durante cinco cuadros.</p>
+      </section>
+    </section>
+
+    <section class="quick-help card" aria-labelledby="help-heading"><h2 id="help-heading">Cómo obtener una buena lectura</h2><div class="help-grid"><p><strong>1. Buena luz.</strong> Evita sombras y reflejos.</p><p><strong>2. Una moneda.</strong> Céntrala en el recuadro.</p><p><strong>3. Quédate quieto.</strong> Espera el sonido de confirmación y la voz.</p></div></section>
+    <p id="error-message" class="error-message" role="alert" hidden></p>
+    <p id="screenreader-result" class="sr-only" role="status" aria-live="off" aria-atomic="true"></p>
+    <p class="shortcut-note">Atajos: <strong>Espacio</strong> iniciar o detener · <strong>R</strong> repetir voz · <strong>M</strong> silenciar o activar.</p>
+    <section class="privacy-note"><strong>Privacidad:</strong> las imágenes no se envían a un servidor. Esta es una herramienta de apoyo y no detecta falsificaciones.</section>
+  </main>
+  <footer class="site-footer"><span>Moneda Voz</span><span>Hecha para todas las personas.</span></footer>
+  <audio id="confirmation-audio" preload="auto" src="./sounds/confirm.mp3"></audio>
+  <noscript><p class="noscript-message">Activa JavaScript para utilizar la cámara y reconocer monedas.</p></noscript>
+</body>
+</html>
